@@ -14,8 +14,8 @@ contract Dex {
 
   struct Order {
     uint256 id;
-    Side side;
     address trader;
+    Side side;
     bytes32 ticker;
     uint256 amount;
     uint256 filled;
@@ -159,18 +159,18 @@ contract Dex {
 
     while (i < orders.length && remainingPortion > 0) {
       uint256 available = orders[i].amount.sub(orders[i].filled);
-      uint256 matched = (remaining > available) ? available : remaining;
-      remaining = remaining.sub(matched);
+      uint256 matched = (remainingPortion > available) ? available : remainingPortion;
+      remainingPortion = remainingPortion.sub(matched);
       orders[i].filled = orders[i].filled.add(matched);
 
-      emit newTrade(
-        nexttradeId,
+      emit NewTrade(
+        nextTradeId,
         orders[i].id,
         ticker,
         orders[i].trader,
         msg.sender,
         matched,
-        price,
+        orders[i].price,
         now
       );
 
@@ -178,7 +178,7 @@ contract Dex {
         traderBalances[msg.sender][ticker] = traderBalances[msg.sender][ticker]
         .sub(matched);
         traderBalances[msg.sender][DAI] = traderBalances[msg.sender][DAI].add(
-          matched.mul(orders[i])
+          matched.mul(orders[i].price)
         );
         traderBalances[orders[i].trader][ticker] = traderBalances[
           orders[i].trader
@@ -187,7 +187,7 @@ contract Dex {
         traderBalances[orders[i].trader][DAI] = traderBalances[
           orders[i].trader
         ][DAI]
-        .sub(matched.mul(orders[i]));
+        .sub(matched.mul(orders[i].price));
       }
 
       if (side == Side.BUY) {
@@ -198,7 +198,7 @@ contract Dex {
         traderBalances[msg.sender][ticker] = traderBalances[msg.sender][ticker]
         .add(matched);
         traderBalances[msg.sender][DAI] = traderBalances[msg.sender][DAI].sub(
-          matched.mul(orders[i])
+          matched.mul(orders[i].price)
         );
         traderBalances[orders[i].trader][ticker] = traderBalances[
           orders[i].trader
@@ -207,7 +207,7 @@ contract Dex {
         traderBalances[orders[i].trader][DAI] = traderBalances[
           orders[i].trader
         ][DAI]
-        .add(matched.mul(orders[i]));
+        .add(matched.mul(orders[i].price));
       }
 
       nextTradeId = nextTradeId.add(1);
@@ -216,13 +216,13 @@ contract Dex {
 
     // Prune orders book
     i = 0;
-    while (i < order.length && orders[i].filled == orders[i].amount) {
+    while (i < orders.length && orders[i].filled == orders[i].amount) {
       // if orders is filled remove it from array by shift to left and pop last element
       for (uint256 j = i; j < orders.length - 1; j++) {
         orders[j] = orders[j + 1];
       }
 
-      order.pop();
+      orders.pop();
       i = i.add(1);
     }
   }
@@ -235,17 +235,19 @@ contract Dex {
     return orderBook[ticker][uint256(side)];
   }
 
-  function getTokens() external view returns (Token[] memory) {
-    Token[] memory _tokens = new Token[](tokenList.length);
-    for (uint256 i = 0; i < tokenList.length; i++) {
-      _tokens[i] = Token(
-        tokens[tokenList[i]].id,
-        tokens[tokenList[i]].symbol,
-        tokens[tokenList[i]].at
-      );
+    function getTokens()
+      external
+      view
+      returns(Token[] memory) {
+      Token[] memory _tokens = new Token[](tokenList.length);
+      for (uint i = 0; i < tokenList.length; i++) {
+        _tokens[i] = Token(
+          tokens[tokenList[i]].ticker,
+          tokens[tokenList[i]].tokenAddress
+        );
+      }
+      return _tokens;
     }
-    return _tokens;
-  }
 
   modifier onlyAdmin {
     require(msg.sender == admin, "Only admin");
