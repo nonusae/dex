@@ -1,3 +1,4 @@
+const { expectRevert } = require('@openzeppelin/test-helpers');
 const Dai = artifacts.require('mock/Dai.sol');
 const Bat = artifacts.require('mock/Bat.sol');
 const Rep = artifacts.require('mock/Rep.sol');
@@ -5,12 +6,13 @@ const Zrx = artifacts.require('mock/Zrx.sol');
 const Dex = artifacts.require('Dex.sol');
 
 contract('Dex', (accounts) => {
-  let dai, bat, rep, zrx;
+  let dai, bat, rep, zrx, dex;
   const [trader1, trader2] = [accounts[1], accounts[2]];
   const [DAI, BAT, REP, ZRX] = ['DAI', 'BAT', 'REP', 'ZRX'].map((ticker) =>
     web3.utils.fromAscii(ticker),
   );
 
+  // Initialization
   beforeEach(async () => {
     [dai, bat, rep, zrx] = await Promise.all([
       Dai.new(),
@@ -19,7 +21,7 @@ contract('Dex', (accounts) => {
       Zrx.new(),
     ]);
 
-    const dex = await Dex.new();
+    dex = await Dex.new();
     await Promise.all([
       dex.addToken(DAI, dai.address),
       dex.addToken(BAT, bat.address),
@@ -30,15 +32,34 @@ contract('Dex', (accounts) => {
     const amount = web3.utils.toWei('1000');
     const seedTokenBalance = async (token, trader) => {
       await token.faucet(trader, amount);
-      await token.approve(dex.address, amount, trader);
+      await token.approve(dex.address, amount, { from: trader });
     };
 
     await Promise.all(
-      [dai, bat, rep, zrx].map((token) => seedtokenBalance(token, trader1)),
+      [dai, bat, rep, zrx].map((token) => seedTokenBalance(token, trader1)),
     );
 
     await Promise.all(
-      [dai, bat, rep, zrx].map((token) => seedtokenBalance(token, trader2)),
+      [dai, bat, rep, zrx].map((token) => seedTokenBalance(token, trader2)),
+    );
+  });
+
+  //Deposit
+  it('should deposit token', async () => {
+    const amount = web3.utils.toWei('100');
+
+    await dex.deposit(amount, DAI, { from: trader1 });
+
+    const balance = await dex.traderBalances(trader1, DAI);
+    assert(balance.toString() === amount);
+  });
+
+  it('should not deposit token if token do not exist', async () => {
+    await expectRevert(
+      dex.deposit(web3.utils.toWei('100'), web3.utils.fromAscii('Not Exists'), {
+        from: trader1,
+      }),
+      'This token does not exist',
     );
   });
 });
