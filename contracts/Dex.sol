@@ -142,11 +142,6 @@ contract Dex {
         traderBalances[msg.sender][ticker] >= amount,
         "token balance too low"
       );
-    } else {
-      // require(
-      //   traderBalances[msg.sender][DAI] >= amount * price,
-      //   'DAI balance too low'
-      // );
     }
 
     Order[] storage orders = orderBook[ticker][
