@@ -188,4 +188,40 @@ contract('Dex', (accounts) => {
       'token balance too low',
     );
   });
+
+  it('should NOT create limit order when user have not enough token', async () => {
+    await expectRevert(
+      dex.createLimitOrder(REP, web3.utils.toWei('100'), 100, SIDE.SELL),
+      'token balance too low',
+    );
+  });
+
+  it.only('should create market order and match agaist existing limit order', async () => {
+    await dex.deposit(web3.utils.toWei('100'), DAI, { from: trader1 });
+    await dex.deposit(web3.utils.toWei('100'), REP, { from: trader2 });
+
+    await dex.createLimitOrder(REP, web3.utils.toWei('10'), 10, SIDE.BUY, {
+      from: trader1,
+    });
+
+    await dex.createMarketOrder(REP, web3.utils.toWei('5'), SIDE.SELL, {
+      from: trader2,
+    });
+
+    const balances = await Promise.all([
+      dex.traderBalances(trader1, DAI),
+      dex.traderBalances(trader1, REP),
+      dex.traderBalances(trader2, DAI),
+      dex.traderBalances(trader2, REP),
+    ]);
+
+    console.log(balances[0].toString());
+
+    const orders = await dex.getOrders(REP, SIDE.BUY);
+    assert(orders[0].filled === web3.utils.toWei('5'));
+    assert(balances[0].toString() === web3.utils.toWei('50'));
+    assert(balances[1].toString() === web3.utils.toWei('5'));
+    assert(balances[2].toString() === web3.utils.toWei('50'));
+    assert(balances[3].toString() === web3.utils.toWei('95'));
+  });
 });
