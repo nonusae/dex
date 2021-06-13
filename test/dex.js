@@ -124,4 +124,68 @@ contract('Dex', (accounts) => {
     assert(buyOrders[0].ticker === web3.utils.padRight(REP, 64));
     assert(sellOrders.length === 0);
   });
+
+  it('should sort limit order by price ', async () => {
+    await dex.deposit(web3.utils.toWei('1000'), DAI, { from: trader1 });
+    await dex.deposit(web3.utils.toWei('1000'), DAI, { from: trader2 });
+
+    await dex.createLimitOrder(REP, web3.utils.toWei('10'), 10, SIDE.BUY, {
+      from: trader1,
+    });
+
+    await dex.createLimitOrder(REP, web3.utils.toWei('10'), 11, SIDE.BUY, {
+      from: trader2,
+    });
+
+    await dex.createLimitOrder(REP, web3.utils.toWei('10'), 9, SIDE.BUY, {
+      from: trader2,
+    });
+
+    const buyOrders = await dex.getOrders(REP, SIDE.BUY);
+    const sellOrders = await dex.getOrders(REP, SIDE.SELL);
+
+    assert(sellOrders.length === 0);
+    assert(buyOrders.length === 3);
+    assert(buyOrders[0].trader === trader2);
+    assert(buyOrders[1].trader === trader1);
+    assert(buyOrders[2].trader === trader2);
+    assert(buyOrders[0].price === '11');
+    assert(buyOrders[1].price === '10');
+    assert(buyOrders[2].price === '9');
+  });
+
+  it('should NOT create limit order when token does not exist', async () => {
+    await expectRevert(
+      dex.createLimitOrder(
+        web3.utils.fromAscii('Not Exists'),
+        web3.utils.toWei('100'),
+        10,
+        SIDE.BUY,
+      ),
+      'This token does not exist',
+    );
+  });
+
+  it('should NOT create limit order when token is DAI', async () => {
+    await expectRevert(
+      dex.createLimitOrder(DAI, web3.utils.toWei('100'), 10, SIDE.BUY),
+      'cannot trade DAI',
+    );
+  });
+
+  it('should NOT create limit order when balance is too low', async () => {
+    await dex.deposit(web3.utils.toWei('10'), DAI, { from: trader1 });
+
+    await expectRevert(
+      dex.createLimitOrder(REP, web3.utils.toWei('100'), 10, SIDE.BUY),
+      'DAI balance too low',
+    );
+  });
+
+  it('should NOT create limit order when user have not enough token', async () => {
+    await expectRevert(
+      dex.createLimitOrder(REP, web3.utils.toWei('100'), 10, SIDE.SELL),
+      'token balance too low',
+    );
+  });
 });
