@@ -1,6 +1,6 @@
 import Web3 from 'web3';
 import Dex from './contracts/Dex.json';
-import ERC from './contracts/ERC20.json';
+import ERC20 from './contracts/ERC20.json';
 
 const getWeb3 = () => {
   return new Promise((resolve, reject) => {
@@ -45,6 +45,7 @@ const getContracts = async (web3) => {
     Dex.abi,
     deployedNetwork && deployedNetwork.address,
   );
+
   const tokens = await dex.methods.getTokens().call();
   const tokenContracts = tokens.reduce(
     (acc, token) => ({
