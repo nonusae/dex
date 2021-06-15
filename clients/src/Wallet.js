@@ -5,13 +5,13 @@ const DIRECTION = {
   DEPOSIT: 'DEPOSIT',
 };
 
-function Wallet({ user, deposit, widthdraw }) {
+function Wallet({ user, deposit, withdraw }) {
   const [direction, setDirection] = useState(DIRECTION.DEPOSIT);
-  const [amount, setamount] = useState(0);
+  const [amount, setAmount] = useState(0);
 
   const onSubmit = (e) => {
     e.preventDefault();
-    if (direciton === DIRECTION.DEPOSIT) {
+    if (direction === DIRECTION.DEPOSIT) {
       deposit(amount);
     } else {
       withdraw(amount);
