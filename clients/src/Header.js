@@ -3,22 +3,23 @@ import Dropdown from './Dropdown.js';
 
 function Header({ user, tokens, contracts, selectToken }) {
   return (
-    <header id="header" className="row">
+    <header id="header" className="card">
       <div className="row">
         <div className="col-sm-3 flex">
-          <Dropdown items={tokens.map(token => ({
-            label: token.ticker,
-            value: token
-          }))}
-          activeItem={
-            label: user.selectedToken.ticker,
-            value: user.selectedToken
-          }
-          onSelect={selectToken}
+          <Dropdown
+            items={tokens.map((token) => ({
+              label: token.ticker,
+              value: token,
+            }))}
+            activeItem={{
+              label: user.selectedToken.ticker,
+              value: user.selectedToken,
+            }}
+            onSelect={selectToken}
           ></Dropdown>
         </div>
         <div className="col-sm-9">
-          <h1 class="header-title">
+          <h1 className="header-title">
             Dex -{' '}
             <span className="contract-address">
               Contract address:{' '}
@@ -30,3 +31,5 @@ function Header({ user, tokens, contracts, selectToken }) {
     </header>
   );
 }
+
+export default Header;

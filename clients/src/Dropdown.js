@@ -17,7 +17,7 @@ function DropDown({ onSelect, activeItem, items }) {
       >
         {activeItem.label}
       </button>
-      <div className={`dropdown-menu ${dropDownVisible ? 'visible' : ''}`}>
+      <div className={`dropdown-menu ${dropdownVisible ? 'visible' : ''}`}>
         {items &&
           items.map((item, index) => (
             <a
