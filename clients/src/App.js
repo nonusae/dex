@@ -4,6 +4,7 @@ import Header from './Header.js';
 import Wallet from './Wallet.js';
 import NewOrder from './NewOrder.js';
 import AllOrders from './AllOrders.js';
+import MyOrders from './MyOrders.js';
 
 const SIDE = {
   BUY: 0,
@@ -166,6 +167,20 @@ function App({ web3, accounts, contracts }) {
           {user.selectedToken !== 'DAI' ? (
             <div className="col-sm-8">
               <AllOrders orders={orders} />
+              <MyOrders
+                orders={{
+                  buy: orders.buy.filter(
+                    (order) =>
+                      order.trader.toLowerCase() ===
+                      user.accounts[0].toLowerCase(),
+                  ),
+                  sell: orders.sell.filter(
+                    (order) =>
+                      order.trader.toLowerCase() ===
+                      user.accounts[0].toLowerCase(),
+                  ),
+                }}
+              />
             </div>
           ) : null}
         </div>
