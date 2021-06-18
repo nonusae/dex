@@ -5,7 +5,7 @@ import App from './App.js';
 function LoadingContainer() {
   const [web3, setWeb3] = useState(undefined);
   const [accounts, setAccounts] = useState([]);
-  const [contracts, setContracts] = useState([]);
+  const [contracts, setContracts] = useState(undefined);
 
   useEffect(() => {
     const init = async () => {
@@ -17,6 +17,7 @@ function LoadingContainer() {
       setAccounts(accounts);
     };
     init();
+    // eslint-disable-next-line
   }, []);
 
   const isReady = () => {
@@ -30,7 +31,6 @@ function LoadingContainer() {
   if (!isReady()) {
     return <div>Loading...</div>;
   }
-
   return <App web3={web3} accounts={accounts} contracts={contracts} />;
 }
 
